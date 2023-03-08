@@ -50,11 +50,16 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             }
         }
     };
-
-    xhr.open('POST', url);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Accept", 'application/json')
-    xhr.send(JSON.stringify(objects));
+    if (Object.keys(objects).length != 0) {
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Accept", 'application/json')
+        xhr.send(JSON.stringify(objects));
+    } else {
+        xhr.open("GET", url, true)
+        xhr.send();
+    }
+    
    
     //XXX: POST to a URL
     //XXX: set the mimetype and the accept headers!
@@ -91,9 +96,9 @@ function prepEntity(entity) {
 
 function clearFrame() {
     with(context) {
-	moveTo(0,0);
-	fillStyle = "#000";
-	fillRect(0,0,W,H);
+	    moveTo(0,0);
+	    fillStyle = "#000";
+	    fillRect(0,0,W,H);
     }
 
 }
@@ -146,13 +151,9 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
-
-    var xhr = new XMLHttpRequest();
-
-
-    xhr.open("PUT", "http://localhost:5000/entity/"+entity);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(JSON.stringify(data));
+    sendJSONXMLHTTPRequest(window.location.href.replace(window.location.pathname, `/entity/${entity}`), data, function(res) {
+        //console.log(res)
+    })
     //XXX: Send a XHTML Request that updates the entity you just  modified!
 
 }
@@ -278,13 +279,17 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    var xhr = new XMLHttpRequest()
-    xhr.open("GET", "http://localhost:5000/world")
-    xhr.send()
     
-    //sendJSONXMLHTTPRequest("http://localhost:5000/world", {})
+    sendJSONXMLHTTPRequest(window.location.href.replace(window.location.pathname, '/world'), {}, function(res) {
+        world = res
+    } );
 
+    console.log(world);
+    console.log(drawNext)
     drawFrame();
+
+    
+
 }
 
 // 30 frames per second
