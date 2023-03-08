@@ -78,21 +78,22 @@ def hello():
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
-    key = list(flask_post_json().keys())[0]
-    value = flask_post_json()[key]
-    print("here")
     if request.method == 'PUT':
-        myWorld.set(entity, flask_post_json())
-        return 'OK'
+        
+        for i in range(len(list(flask_post_json().keys()))):
+            key = list(flask_post_json().keys())[i]
+            value = flask_post_json()[key]
+            myWorld.update(entity, key, value)
+        return myWorld.get(entity), '200'
     elif request.method == 'POST':
-        myWorld.update(entity, key, value)
-        return 'OK'
+        myWorld.set(entity, flask_post_json())
+        return myWorld.world()[entity], '200'
     else:
         return '400'
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
-    return myWorld.world()
+    return myWorld.world(), '200'
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
@@ -100,7 +101,8 @@ def get_entity(entity):
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
-    return myWorld.clear()
+    myWorld.clear()
+    return myWorld.world(), '200'
 
 if __name__ == "__main__":
     app.run()
