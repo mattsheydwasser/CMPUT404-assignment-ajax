@@ -102,7 +102,7 @@ def get_entity(entity):
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     myWorld.clear()
-    return myWorld.world(), '200'
+    return redirect('/static/index.html', code=200)
 
 if __name__ == "__main__":
     app.run()
