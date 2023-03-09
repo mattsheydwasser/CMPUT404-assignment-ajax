@@ -60,8 +60,6 @@ class ServerTestCase(unittest.TestCase):
         r = self.app.put(('/entity/%s' % v),headers=headers, data=json.dumps(d))
         self.assertTrue(r.status_code == 200, "PUT Code not 200!")
         rd = json.loads(utf8(r.data))
-        print('rd:',rd)
-        print('d:',d)
         for key in d:
             self.assertTrue(rd[key] == d[key], "KEY %s " % key)
         r = self.app.get(('/entity/%s' % v))
@@ -90,7 +88,6 @@ class ServerTestCase(unittest.TestCase):
                              data=json.dumps(self.world[key]))
             self.assertTrue(r.status_code == 200, "Code not 200!")
             j = json.loads(utf8(r.data))
-            print(j)
             self.assertTrue(len(j.keys()) >= 3,"JSON lacking keys! %s" % j.keys())
         r = self.app.get('/world')
         self.assertTrue(r.status_code == 200, "Code not 200!")
