@@ -33,16 +33,15 @@ var H = canvas.height = window.innerHeight-50;
 
 
 function sendJSONXMLHTTPRequest(url, objects, callback) {
+
+    // create new XMLHttprequest object and create function that handles state changes
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState==4) {
             try {
                 if (xhr.status==200) {
+                    // return the response as parsed JSON in the callback function
                     callback(JSON.parse(xhr.responseText));
-                    //var data = JSON.parse(xhr.responseText)
-                    //console.log(data)
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
                 }
             } 
             catch(e) {
@@ -50,39 +49,44 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             }
         }
     };
+
+    // if function is given an object to post, create POST request
     if (Object.keys(objects).length != 0) {
+
         xhr.open('POST', url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.setRequestHeader("Accept", 'application/json')
+
         xhr.send(JSON.stringify(objects));
-    } else {
+
+    } else { // otherwise, create GET request
+
         xhr.open('GET', url, true)
         xhr.send();
     }
-    //xhr.open('POST', url);
-    //xhr.setRequestHeader("Content-Type", "application/json");
-    //xhr.setRequestHeader("Accept", 'application/json')
-    //xhr.send(JSON.stringify(objects));
-   
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
 }
 
 
 world = {};
 
-//XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
         beginPath();              
         lineWidth = 3;
+
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
+
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+
+        arc(x, y, (
+            entity["radius"]) 
+            ? entity["radius"] 
+            : 50, 0, 2.0 * Math.PI, false
+        );  
+
         stroke();                                
     }
 }
@@ -151,22 +155,15 @@ function getPosition(e) {
 }
 
 
+// functions for creating new entities
+
 function addEntity(entity, data) {
+
+    // create a new entity with given data on current world
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
 
-
-    sendJSONXMLHTTPRequest(window.location.href.replace(window.location.pathname, `/entity/${entity}`), data, function(res) {
-        //console.log(res)
-    })
-    //var xhr = new XMLHttpRequest();
-
-
-   // xhr.open("PUT", "http://localhost:5000/entity/"+entity);
-    //xhr.setRequestHeader("Content-Type", "application/json");
-    //xhr.send(JSON.stringify(data));
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+    // create a new entity and POST it too the server
+    sendJSONXMLHTTPRequest(window.location.href.replace(window.location.pathname, `/entity/${entity}`), data, function(res) {})
 }
 
 var counter = 0;
@@ -175,6 +172,8 @@ function addEntityWithoutName(data) {
     var name = "X"+(counter++)%100;
     addEntity(name,data);
 }
+
+
 
 // canvas + mouse/touch is complicated 
 // I give you this because well the mouse/touch stuff is a total
@@ -272,43 +271,64 @@ mouse = (function() {
     return self;
 })();
 
+
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
-mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
-});
 
-mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
-});
+// function to draw when mouse is clicked down
+mouse.mousedowners.push(
+    function(x,y,clicked,e) {
+        addEntityWithoutName({
+            'x':x,
+            'y':y,
+            'colour':'blue'
+        });
+    }
+);
 
-mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
-});
+// function to draw when mouse is clicked up (released)
+mouse.mouseuppers.push(
+    function(x,y,clicked,e) {
+        addEntityWithoutName({
+            'x':x,
+            'y':y,
+            'colour':'red'
+        });
+    }
+);
+
+// function to draw when mouse is held down
+mouse.mousedraggers.push(
+    function(x,y,clicked,e) {
+
+        // generates a random color for every circle drawn (rather then boring green all the time)
+        var generateColor = Math.floor(Math.random()*16777215).toString(16);
+        var rainbow = '#'+generateColor;
+        // var green = 'green'
+
+        addEntityWithoutName({
+            'x':x,
+            'y':y,
+            'colour': rainbow,
+            'radius':10
+        });
+    }
+);
 
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    //var xhr = new XMLHttpRequest()
-    //xhr.open("GET", "http://localhost:5000/world")
-    //xhr.send()
-
+    
+    // get updated world object from server, replace current with updated
     sendJSONXMLHTTPRequest(window.location.href.replace(window.location.pathname, '/world'), {}, function(res) {
         world = res
-
     });
+
+    // notify that there is something new to draw, and draw it
     drawNextFrame();
     drawFrame();
-
-    
-
 }
 
 // 30 frames per second
 setInterval( update, 1000/30.0);
-
-
 
     </script>
 </body>
